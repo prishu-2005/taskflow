@@ -1,60 +1,136 @@
-def binary_search_tasks(tasks, target):
+def insertion_sort(records, key):
     """
-    Search for a task by title using binary search.
-    Tasks must already be sorted by title.
+    Sort records in place using insertion sort.
     """
 
-    left = 0
-    right = len(tasks) - 1
-    target = target.lower()
+    for i in range(1, len(records)):
+        current = records[i]
+        j = i - 1
 
-    while left <= right:
-        mid = (left + right) // 2
+        while j >= 0 and records[j][key] > current[key]:
+            records[j + 1] = records[j]
+            j -= 1
 
-        current_title = tasks[mid].title.lower()
+        records[j + 1] = current
 
-        if current_title == target:
-            return tasks[mid]
 
-        if current_title < target:
-            left = mid + 1
+def binary_search(sorted_records, target_value, key):
+    """
+    Search a sorted list using binary search.
+
+    Returns:
+        index of matching record
+        -1 if no match is found
+    """
+
+    low = 0
+    high = len(sorted_records) - 1
+
+    while low <= high:
+        mid = (low + high) // 2
+
+        current_value = sorted_records[mid][key]
+
+        if current_value == target_value:
+            return mid
+
+        if current_value < target_value:
+            low = mid + 1
         else:
-            right = mid - 1
+            high = mid - 1
 
-    return None
+    return -1
 
-def merge_sort_tasks(tasks):
+
+def linear_search(records, target_value, key):
     """
-    Sort tasks alphabetically by title using merge sort.
+    Search a list sequentially.
+
+    Returns:
+        index of first matching record
+        -1 if no match is found
     """
 
-    if len(tasks) <= 1:
-        return tasks
+    for index, record in enumerate(records):
+        if record[key] == target_value:
+            return index
 
-    mid = len(tasks) // 2
-
-    left = merge_sort_tasks(tasks[:mid])
-    right = merge_sort_tasks(tasks[mid:])
-
-    return merge_tasks(left, right)
+    return -1
 
 
-def merge_tasks(left, right):
-    result = []
+def insertion_sort_count(records, key):
+    """
+    Insertion sort with comparison counting.
+    """
 
-    i = 0
-    j = 0
+    comparison_count = 0
 
-    while i < len(left) and j < len(right):
+    for i in range(1, len(records)):
+        current = records[i]
+        j = i - 1
 
-        if left[i].title.lower() <= right[j].title.lower():
-            result.append(left[i])
-            i += 1
+        while j >= 0:
+            comparison_count += 1
+
+            if records[j][key] <= current[key]:
+                break
+
+            records[j + 1] = records[j]
+            j -= 1
+
+        records[j + 1] = current
+
+    return comparison_count
+
+
+def binary_search_count(sorted_records, target_value, key):
+    """
+    Binary search with comparison counting.
+    """
+
+    low = 0
+    high = len(sorted_records) - 1
+    comparison_count = 0
+
+    while low <= high:
+        mid = (low + high) // 2
+
+        comparison_count += 1
+
+        if sorted_records[mid][key] == target_value:
+            return {
+                "index": mid,
+                "comparison_count": comparison_count
+            }
+
+        if sorted_records[mid][key] < target_value:
+            low = mid + 1
         else:
-            result.append(right[j])
-            j += 1
+            high = mid - 1
 
-    result.extend(left[i:])
-    result.extend(right[j:])
+    return {
+        "index": -1,
+        "comparison_count": comparison_count
+    }
 
-    return result
+
+def linear_search_count(records, target_value, key):
+    """
+    Linear search with comparison counting.
+    """
+
+    comparison_count = 0
+
+    for index, record in enumerate(records):
+        comparison_count += 1
+
+        if record[key] == target_value:
+            return {
+                "index": index,
+                "comparison_count": comparison_count
+            }
+
+    return {
+        "index": -1,
+        "comparison_count": comparison_count
+    }
