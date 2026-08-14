@@ -47,6 +47,17 @@ class TaskCreate(BaseModel):
             raise ValueError("Title cannot be blank")
         return value.strip()
 
+class QuickAddRequest(BaseModel):
+    description: str
+    project_id: int
+
+    @field_validator("description")
+    @classmethod
+    def description_must_not_be_blank(cls, value):
+        if not value.strip():
+            raise ValueError("Description cannot be blank")
+        return value
+
 
 class TaskResponse(BaseModel):
     id: int

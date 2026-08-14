@@ -1,13 +1,15 @@
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from algorithms import binary_search_tasks, merge_sort_tasks
 from sqlalchemy import func
+from pydantic import ValidationError
 import time
 
+from algorithms import binary_search_tasks, merge_sort_tasks
 from database import Base, engine, get_db
 import models
 import schemas
+from ai_parser import parse_task_description, parse_with_groq
 
 
 app = FastAPI(title="TaskFlow API")
@@ -47,7 +49,8 @@ async def log_request_time(request: Request, call_next):
     return response
 
 
-# Root
+# ---------------- ROOT ----------------
+
 @app.get("/")
 def root():
     return {"message": "TaskFlow API is running"}
@@ -128,18 +131,118 @@ def get_tasks(db: Session = Depends(get_db)):
     return db.query(models.Task).all()
 
 
+# ---------------- AI QUICK-ADD ----------------
+
+@app.post(
+    "/tasks/quick-add",
+    response_model=schemas.TaskResponse,
+    status_code=201
+)
+def quick_add_task(
+    request: schemas.QuickAddRequest,
+    db: Session = Depends(get_db)
+):
+    # 1. Check that the project exists BEFORE creating a task
+    project = (
+        db.query(models.Project)
+        .filter(models.Project.id == request.project_id)
+        .first()
+    )
+
+    if project is None:
+        raise HTTPException(
+            status_code=422,
+            detail="Project does not exist"
+        )
+
+    # 2. Try optional Groq parser
+    # If Groq is disabled or unavailable, use the required mock.
+    parsed = None
+
+    try:
+        parsed = parse_with_groq(request.description)
+    except Exception:
+        parsed = None
+
+    if parsed is None:
+        parsed = parse_task_description(request.description)
+
+    # 3. Convert parser result into the TaskResponse structure.
+    task_data = {
+        "id": 0,
+        "title": parsed.get("title"),
+        "priority": parsed.get("priority"),
+        "due_date": parsed.get("due_date_hint"),
+        "status": "todo",
+        "project_id": request.project_id
+    }
+
+    # 4. Validate BEFORE touching the database.
+    try:
+        validated_task = schemas.TaskResponse.model_validate(task_data)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=exc.errors()
+        )
+
+    # 5. Create the actual SQLAlchemy Task row.
+    new_task = models.Task(
+        title=validated_task.title,
+        priority=validated_task.priority,
+        due_date=validated_task.due_date,
+        status=validated_task.status,
+        project_id=validated_task.project_id
+    )
+
+    db.add(new_task)
+    db.commit()
+    db.refresh(new_task)
+
+    return new_task
+
+
+# ---------------- GET SINGLE TASK ----------------
+
+@app.get("/tasks/{task_id}", response_model=schemas.TaskResponse)
+def get_task(
+    task_id: int,
+    db: Session = Depends(get_db)
+):
+    task = (
+        db.query(models.Task)
+        .filter(models.Task.id == task_id)
+        .first()
+    )
+
+    if task is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
+
+    return task
+
+
+# ---------------- UPDATE TASK ----------------
+
 @app.put("/tasks/{task_id}", response_model=schemas.TaskResponse)
 def update_task(
     task_id: int,
     task: schemas.TaskCreate,
     db: Session = Depends(get_db)
 ):
-    existing_task = db.query(models.Task).filter(
-        models.Task.id == task_id
-    ).first()
+    existing_task = (
+        db.query(models.Task)
+        .filter(models.Task.id == task_id)
+        .first()
+    )
 
     if existing_task is None:
-        return {"detail": "Task not found"}
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
 
     existing_task.title = task.title
     existing_task.priority = task.priority
@@ -153,17 +256,24 @@ def update_task(
     return existing_task
 
 
+# ---------------- DELETE TASK ----------------
+
 @app.delete("/tasks/{task_id}")
 def delete_task(
     task_id: int,
     db: Session = Depends(get_db)
 ):
-    existing_task = db.query(models.Task).filter(
-        models.Task.id == task_id
-    ).first()
+    existing_task = (
+        db.query(models.Task)
+        .filter(models.Task.id == task_id)
+        .first()
+    )
 
     if existing_task is None:
-        return {"detail": "Task not found"}
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
 
     db.delete(existing_task)
     db.commit()
@@ -202,7 +312,12 @@ def project_statistics(db: Session = Depends(get_db)):
     ]
 
 
-@app.get("/tasks/search", response_model=schemas.TaskResponse | None)
+# ---------------- SEARCH ----------------
+
+@app.get(
+    "/tasks/search",
+    response_model=schemas.TaskResponse | None
+)
 def search_task(
     title: str,
     db: Session = Depends(get_db)
@@ -217,11 +332,16 @@ def search_task(
 
     return result
 
-@app.get("/tasks/sorted", response_model=list[schemas.TaskResponse])
+
+# ---------------- SORTED TASKS ----------------
+
+@app.get(
+    "/tasks/sorted",
+    response_model=list[schemas.TaskResponse]
+)
 def get_sorted_tasks(db: Session = Depends(get_db)):
     tasks = db.query(models.Task).all()
 
     sorted_tasks = merge_sort_tasks(tasks)
 
     return sorted_tasks
-
