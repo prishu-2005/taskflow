@@ -1,29 +1,27 @@
+
 import re
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
 USE_REAL_LLM = os.getenv("USE_REAL_LLM", "false").lower() == "true"
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-
 
 
 def parse_task_description(description: str):
     working = description.lower()
 
-    # Priority
-    if "urgent" in working or "asap" in working:
+    # Priority detection
+    if re.search(r"\b(?:urgent|urgently|asap)\b", working):
         priority = "high"
-    elif "whenever" in working or "low priority" in working:
+    elif re.search(r"\bwhenever\b|\blow\s+priority\b", working):
         priority = "low"
     else:
         priority = "medium"
 
-    # Due-date hint
+    # Due-date hints: check longer phrases before shorter ones
     date_phrases = [
-        "today",
-        "tomorrow",
-        "next week",
         "next monday",
         "next tuesday",
         "next wednesday",
@@ -31,6 +29,9 @@ def parse_task_description(description: str):
         "next friday",
         "next saturday",
         "next sunday",
+        "next week",
+        "tomorrow",
+        "today",
         "monday",
         "tuesday",
         "wednesday",
@@ -43,39 +44,35 @@ def parse_task_description(description: str):
     due_date_hint = None
 
     for phrase in date_phrases:
-        if phrase in working:
+        pattern = r"\b" + re.escape(phrase) + r"\b"
+        if re.search(pattern, working):
             due_date_hint = phrase
             break
 
-    # Remove every priority keyword from the original-cased description
+    # Remove priority phrases as complete words, case-insensitively
     title = description
 
-    priority_keywords = [
-        "urgent",
-        "asap",
-        "whenever",
-        "low priority",
+    priority_patterns = [
+        r"\blow\s+priority\b",
+        r"\bwhenever\b",
+        r"\burgently\b",
+        r"\burgent\b",
+        r"\basap\b",
     ]
 
-    for keyword in priority_keywords:
-        title = re.sub(
-            re.escape(keyword),
-            "",
-            title,
-            flags=re.IGNORECASE,
-        )
+    for pattern in priority_patterns:
+        title = re.sub(pattern, "", title, flags=re.IGNORECASE)
 
-    # Remove every occurrence of the matched date phrase
+    # Remove the detected date phrase as a complete phrase
     if due_date_hint:
-        title = re.sub(
-            re.escape(due_date_hint),
-            "",
-            title,
-            flags=re.IGNORECASE,
-        )
+        date_pattern = r"\b" + re.escape(due_date_hint) + r"\b"
+        title = re.sub(date_pattern, "", title, flags=re.IGNORECASE)
 
-    title = re.sub(r"\s+", " ", title).strip()
-
+    # Clean up leftover punctuation and whitespace
+    title = re.sub(r"\s+", " ", title)
+    title = re.sub(r"\s*[,.;!?]+\s*$", "", title)
+    title = re.sub(r"^[,.;!?]+\s*", "", title)
+    title = title.strip()
     if not title:
         title = "Untitled task"
 
@@ -84,6 +81,7 @@ def parse_task_description(description: str):
         "priority": priority,
         "due_date_hint": due_date_hint,
     }
+
 
 def parse_with_groq(description: str):
     if not USE_REAL_LLM or not GROQ_API_KEY:
@@ -108,14 +106,8 @@ Do not include any other fields.
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
-            {
-                "role": "system",
-                "content": system_prompt,
-            },
-            {
-                "role": "user",
-                "content": description,
-            },
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": description},
         ],
         response_format={"type": "json_object"},
     )
@@ -128,3 +120,4 @@ Do not include any other fields.
     result = json.loads(content)
 
     return result
+

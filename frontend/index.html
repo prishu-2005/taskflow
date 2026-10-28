@@ -1,194 +1,314 @@
 <!DOCTYPE html>
-
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskFlow</title>
+
+    <title>TaskFlow - Task Management Dashboard</title>
+
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-```
-<header class="topbar">
-    <div>
-        <h1>TaskFlow</h1>
-        <p>Task & Project Management Dashboard</p>
-    </div>
-    <span id="api-status" class="status">Checking API...</span>
-</header>
-
-<main class="container">
-
-    <!-- Statistics -->
-    <section class="stats-grid">
-        <div class="stat-card">
-            <span>Total Tasks</span>
-            <strong id="total-tasks">0</strong>
+    <!-- Header -->
+    <header class="topbar">
+        <div>
+            <h1>TaskFlow</h1>
+            <p>Task &amp; Project Management Dashboard</p>
         </div>
 
-        <div class="stat-card">
-            <span>Total Projects</span>
-            <strong id="total-projects">0</strong>
-        </div>
+        <span id="api-status" class="status">
+            Checking API...
+        </span>
+    </header>
 
-        <div class="stat-card">
-            <span>High Priority</span>
-            <strong id="high-priority">0</strong>
-        </div>
+    <main class="container">
 
-        <div class="stat-card">
-            <span>Pending</span>
-            <strong id="pending-tasks">0</strong>
-        </div>
-    </section>
+        <!-- Dashboard Statistics -->
+        <section class="stats-grid">
 
-    <!-- Quick Add -->
-    <section class="card">
-        <h2>AI Quick Add</h2>
-        <p class="muted">
-            Describe your task naturally and TaskFlow will extract the title,
-            priority and due date.
-        </p>
-
-        <form id="quick-add-form">
-            <div class="form-row">
-                <input
-                    type="text"
-                    id="quick-description"
-                    placeholder="Example: Fix inventory bug next Friday, it's urgent"
-                    required
-                >
-
-                <input
-                    type="number"
-                    id="quick-project-id"
-                    placeholder="Project ID"
-                    min="1"
-                    required
-                >
-
-                <button type="submit">Quick Add</button>
+            <div class="stat-card">
+                <span>Total Tasks</span>
+                <strong id="total-tasks">0</strong>
             </div>
-        </form>
 
-        <div id="quick-add-message"></div>
-    </section>
+            <div class="stat-card">
+                <span>Total Projects</span>
+                <strong id="total-projects">0</strong>
+            </div>
 
-    <!-- Create Task -->
-    <section class="card">
-        <h2>Create Task</h2>
+            <div class="stat-card">
+                <span>High Priority</span>
+                <strong id="high-priority">0</strong>
+            </div>
 
-        <form id="task-form">
+            <div class="stat-card">
+                <span>Pending</span>
+                <strong id="pending-tasks">0</strong>
+            </div>
 
-            <div class="form-grid">
+        </section>
 
-                <div>
-                    <label for="task-title">Title</label>
+        <!-- AI Quick Add -->
+        <section class="card">
+
+            <h2>AI Quick Add</h2>
+
+            <p class="muted">
+                Describe your task naturally and TaskFlow will extract
+                its title, priority and due-date hint.
+            </p>
+
+            <form id="quick-add-form">
+
+                <div class="form-row">
+
                     <input
                         type="text"
-                        id="task-title"
+                        id="quick-description"
+                        placeholder="Example: Finish resume tomorrow, urgent"
                         required
                     >
-                </div>
 
-                <div>
-                    <label for="task-priority">Priority</label>
-                    <select id="task-priority">
-                        <option value="low">Low</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="high">High</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="task-due-date">Due Date</label>
-                    <input
-                        type="text"
-                        id="task-due-date"
-                        placeholder="2026-08-20"
-                    >
-                </div>
-
-                <div>
-                    <label for="task-status">Status</label>
-                    <select id="task-status">
-                        <option value="todo">Todo</option>
-                        <option value="pending">Pending</option>
-                        <option value="completed">Completed</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="task-project-id">Project ID</label>
                     <input
                         type="number"
-                        id="task-project-id"
+                        id="quick-project-id"
+                        placeholder="Project ID"
                         min="1"
                         required
                     >
+
+                    <button type="submit">
+                        Quick Add
+                    </button>
+
+                </div>
+
+            </form>
+
+            <div
+                id="quick-add-message"
+                role="status"
+                aria-live="polite"
+            ></div>
+
+        </section>
+
+        <!-- Create Task -->
+        <section class="card">
+
+            <h2>Create Task</h2>
+
+            <form id="task-form">
+
+                <div class="form-grid">
+
+                    <div>
+                        <label for="task-title">Title</label>
+
+                        <input
+                            type="text"
+                            id="task-title"
+                            placeholder="Example: Complete Python assignment"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="task-priority">Priority</label>
+
+                        <select id="task-priority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="task-due-date">Due Date</label>
+
+                        <input
+                            type="text"
+                            id="task-due-date"
+                            placeholder="Example: 2026-10-30"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="task-status">Status</label>
+
+                        <select id="task-status">
+                            <option value="todo">Todo</option>
+                            <option value="pending">Pending</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="task-project-id">Project ID</label>
+
+                        <input
+                            type="number"
+                            id="task-project-id"
+                            min="1"
+                            placeholder="Enter project ID"
+                            required
+                        >
+                    </div>
+
+                </div>
+
+                <button type="submit">
+                    Create Task
+                </button>
+
+            </form>
+
+            <div
+                id="task-message"
+                role="status"
+                aria-live="polite"
+            ></div>
+
+        </section>
+
+        <!-- Tasks -->
+        <section class="card">
+
+            <div class="section-header">
+
+                <div>
+                    <h2>Tasks</h2>
+
+                    <p class="muted">
+                        Search and sort your tasks.
+                    </p>
+                </div>
+
+                <div class="search-controls">
+
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="Search task title..."
+                    >
+
+                    <button type="button" id="search-button">
+                        Search
+                    </button>
+
+                    <button
+                        type="button"
+                        id="show-all-button"
+                        class="secondary"
+                    >
+                        Show All
+                    </button>
+
+                    <button
+                        type="button"
+                        id="sort-button"
+                        class="secondary"
+                    >
+                        Sort
+                    </button>
+
                 </div>
 
             </div>
 
-            <button type="submit">Create Task</button>
-        </form>
-
-        <div id="task-message"></div>
-    </section>
-
-    <!-- Search -->
-    <section class="card">
-        <div class="section-header">
-            <div>
-                <h2>Tasks</h2>
-                <p class="muted">Search and sort your tasks.</p>
+            <div id="task-list" class="task-list">
+                <p class="muted">Loading tasks...</p>
             </div>
 
-            <div class="search-controls">
-                <input
-                    type="text"
-                    id="search-input"
-                    placeholder="Search task title..."
-                >
-                <button id="search-button">Search</button>
-                <button id="show-all-button" class="secondary">
-                    Show All
-                </button>
-                <button id="sort-button" class="secondary">
-                    Sort
-                </button>
+        </section>
+
+        <!-- Projects -->
+        <section class="card">
+
+            <div class="section-header">
+
+                <div>
+                    <h2>Projects</h2>
+
+                    <p class="muted">
+                        Create projects and view their task counts.
+                    </p>
+                </div>
+
             </div>
-        </div>
 
-        <div id="task-list" class="task-list">
-            <p class="muted">Loading tasks...</p>
-        </div>
-    </section>
+            <!-- NEW: Create Project Form -->
+            <div class="project-create-section">
 
-    <!-- Projects -->
-    <section class="card">
-        <div class="section-header">
-            <div>
-                <h2>Projects</h2>
-                <p class="muted">Projects and their task counts.</p>
+                <h3>Create a New Project</h3>
+
+                <form id="project-form">
+
+                    <div class="form-row">
+
+                        <div>
+                            <label for="project-name">
+                                Project Name
+                            </label>
+
+                            <input
+                                type="text"
+                                id="project-name"
+                                placeholder="Example: Resume Builder"
+                                maxlength="100"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label for="project-owner-id">
+                                Owner ID
+                            </label>
+
+                            <input
+                                type="number"
+                                id="project-owner-id"
+                                min="1"
+                                value="1"
+                                required
+                            >
+                        </div>
+
+                        <button type="submit">
+                            Create Project
+                        </button>
+
+                    </div>
+
+                </form>
+
+                <div
+                    id="project-message"
+                    role="status"
+                    aria-live="polite"
+                ></div>
+
             </div>
-        </div>
 
-        <div id="project-list" class="project-list">
-            <p class="muted">Loading projects...</p>
-        </div>
-    </section>
+            <!-- Existing Project List -->
+            <div id="project-list" class="project-list">
+                <p class="muted">Loading projects...</p>
+            </div>
 
-</main>
+        </section>
 
-<footer>
-    <p>TaskFlow — Full-Stack Task Management Platform</p>
-</footer>
+    </main>
 
-<script src="script.js"></script>
-```
+    <!-- Footer -->
+    <footer>
+        <p>TaskFlow — Full-Stack Task Management Platform</p>
+    </footer>
+
+    <script src="script.js"></script>
 
 </body>
+
 </html>

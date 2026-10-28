@@ -1,5 +1,20 @@
-venv/
+# Python
 __pycache__/
+*.py[cod]
 *.pyc
-taskflow.db
+.pytest_cache/
+
+# Virtual environments
+venv/
+taskflow-venv/
+.venv/
+
+# Databases
+*.db
+
+# Environment variables
 .env
+
+# Test artifacts
+.coverage
+htmlcov/

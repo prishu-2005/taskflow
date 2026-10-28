@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field, field_validator
+
 from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class UserCreate(BaseModel):
@@ -12,8 +14,7 @@ class UserResponse(BaseModel):
     name: str
     email: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProjectCreate(BaseModel):
@@ -26,15 +27,14 @@ class ProjectResponse(BaseModel):
     name: str
     owner_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TaskCreate(BaseModel):
     title: str
     priority: str = Field(
         default="medium",
-        pattern="^(low|medium|high)$"
+        pattern="^(low|medium|high)$",
     )
     due_date: Optional[str] = None
     status: str = "todo"
@@ -46,6 +46,7 @@ class TaskCreate(BaseModel):
         if not value.strip():
             raise ValueError("Title cannot be blank")
         return value.strip()
+
 
 class QuickAddRequest(BaseModel):
     description: str
@@ -67,5 +68,5 @@ class TaskResponse(BaseModel):
     status: str
     project_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
